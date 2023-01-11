@@ -1,23 +1,23 @@
-package xyz.nasrally.domashka.restorepoint;
+package xyz.detribes.bekapi.restorepoint;
 
 import org.slf4j.*;
-import xyz.nasrally.domashka.storage.*;
-import xyz.nasrally.domashka.util.factory.*;
-import xyz.nasrally.domashka.util.factory.enums.*;
+import xyz.detribes.bekapi.storage.*;
+import xyz.detribes.bekapi.util.factory.*;
+import xyz.detribes.bekapi.util.factory.enums.*;
 
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.zip.*;
 
-public class ZipSingleFileRestorePoint extends AbstractFSRestorePoint {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ZipSingleFileRestorePoint.class);
+public class ZipSplitFileRestorePoint extends AbstractFSRestorePoint {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ZipSplitFileRestorePoint.class);
 
     private Path dirUnzipStorages;
 
     private boolean isLoaded = false;
 
-    public ZipSingleFileRestorePoint(String name, Path path) {
+    public ZipSplitFileRestorePoint(String name, Path path) {
         super(name, path);
 
         createNewTmpDir();
@@ -30,37 +30,24 @@ public class ZipSingleFileRestorePoint extends AbstractFSRestorePoint {
     @Override
     public void save() {
         load();
-        Path copy = Path.of(getPath().toString() + "_copy");
 
-        try (ZipOutputStream zos = openZipWrite(copy)) {
-            Map<String, Storage> newStorages = new HashMap<>(getStorages());
+        Map<String, Storage> newStorages = new HashMap<>();
 
-            getStoragesToCopy().entrySet().stream()
-                    .filter(e -> !newStorages.containsKey(e.getKey()))
-                    .forEach(e -> newStorages.put(e.getKey(), e.getValue()));
+        getStoragesToCopy().entrySet().stream()
+                .filter(e -> !getStorages().containsKey(e.getKey()))
+                .forEach(e -> newStorages.put(e.getKey(), e.getValue()));
 
-            for (Map.Entry<String, Storage> e : newStorages.entrySet()) {
-                ZipEntry entry = new ZipEntry(e.getKey());
+        for (Map.Entry<String, Storage> e : newStorages.entrySet()) {
+            try (ZipOutputStream zos = openZipWrite(getPath().resolve(e.getKey()))) {
+                Storage stor = e.getValue();
+
+                ZipEntry entry = new ZipEntry(stor.getName());
                 zos.putNextEntry(entry);
-                e.getValue().retrieve().transferTo(zos);
-                zos.closeEntry();
-            }
-        } catch (IOException e) {
-            LOGGER.error(e.toString());
-        }
 
-        if (Files.exists(getPath())) {
-            try {
-                Files.delete(getPath());
-                Files.move(copy, getPath());
-            } catch (IOException e) {
-                LOGGER.error(e.toString());
-            }
-        } else {
-            try {
-                Files.move(copy, getPath());
-            } catch (IOException e) {
-                LOGGER.error(e.toString());
+                stor.retrieve().transferTo(zos);
+                zos.closeEntry();
+            } catch (IOException ex) {
+                ex.printStackTrace();
             }
         }
 
@@ -81,22 +68,39 @@ public class ZipSingleFileRestorePoint extends AbstractFSRestorePoint {
         removeTmpDir();
         createNewTmpDir();
 
-        try (ZipInputStream zis = openZipRead(getPath())) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-//                ZipEntry entry = zis.getNextEntry();
+        try {
+            Files.find(getPath(), 1, (p, a) -> a.isRegularFile())
+                    .forEach(path -> {
+                        Path newFile = null;
+                        String newFileName = null;
+                        try {
+                            newFile = Files.createFile(dirUnzipStorages.resolve(path.getFileName().toString()));
+                            newFileName = newFile.getFileName().toString();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        Objects.requireNonNull(newFile);
+                        Objects.requireNonNull(newFileName);
 
-                Storage newStor = StorageFactory.create(
-                        StorageType.FILE,
-                        Objects.requireNonNull(entry).getName(),
-                        dirUnzipStorages.resolve(entry.getName()));
+                        try (ZipInputStream zis = openZipRead(path);
+                             OutputStream fos = new BufferedOutputStream(
+                                     Files.newOutputStream(
+                                         newFile,
+                                         StandardOpenOption.WRITE))) {
+                            zis.transferTo(fos);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
 
-                getStorages().put(entry.getName(), newStor);
-                zis.transferTo(newStor.copyInto());
-                zis.closeEntry();
-            }
+                        Storage newStor = StorageFactory.create(
+                                StorageType.FILE,
+                                newFileName,
+                                dirUnzipStorages.resolve(newFileName));
+
+                        getStorages().put(newFileName, newStor);
+                    });
         } catch (IOException e) {
-            LOGGER.error(e.toString());
+            e.printStackTrace();
         }
 
         isLoaded = true;
@@ -156,10 +160,9 @@ public class ZipSingleFileRestorePoint extends AbstractFSRestorePoint {
 
     private void createNewTmpDir() {
         try {
-            dirUnzipStorages = Files.createTempDirectory("domashkaZipSingle");
+            dirUnzipStorages = Files.createTempDirectory("domashkaZipSplit");
         } catch (IOException e) {
             LOGGER.error(e.toString());
         }
     }
-
 }

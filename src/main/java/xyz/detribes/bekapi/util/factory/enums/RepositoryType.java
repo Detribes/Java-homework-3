@@ -1,4 +1,4 @@
-package xyz.nasrally.domashka.util.factory.enums;
+package xyz.detribes.bekapi.util.factory.enums;
 
 /**
  * Перечисление с доступными типами репозиториев. Используется в соответствующей фабрике.

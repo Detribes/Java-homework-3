@@ -1,6 +1,10 @@
-package xyz.nasrally.domashka.util.factory;
+package xyz.detribes.bekapi.util.factory;
 
 import org.slf4j.*;
+import xyz.detribes.bekapi.storage.FileStorage;
+import xyz.detribes.bekapi.storage.MemoryStorage;
+import xyz.detribes.bekapi.storage.Storage;
+import xyz.detribes.bekapi.util.factory.enums.StorageType;
 import xyz.nasrally.domashka.storage.*;
 import xyz.nasrally.domashka.util.factory.enums.*;
 

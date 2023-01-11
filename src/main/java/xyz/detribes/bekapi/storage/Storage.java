@@ -1,4 +1,4 @@
-package xyz.nasrally.domashka.storage;
+package xyz.detribes.bekapi.storage;
 
 import java.io.*;
 

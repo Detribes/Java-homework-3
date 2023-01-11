@@ -1,6 +1,6 @@
-package xyz.nasrally.domashka.restorepoint;
+package xyz.detribes.bekapi.restorepoint;
 
-import xyz.nasrally.domashka.storage.*;
+import xyz.detribes.bekapi.storage.*;
 
 import java.util.*;
 

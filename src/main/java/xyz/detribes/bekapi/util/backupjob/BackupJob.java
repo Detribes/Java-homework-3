@@ -1,9 +1,9 @@
-package xyz.nasrally.domashka.util.backupjob;
+package xyz.detribes.bekapi.util.backupjob;
 
 import org.slf4j.*;
-import xyz.nasrally.domashka.repository.*;
-import xyz.nasrally.domashka.restorepoint.*;
-import xyz.nasrally.domashka.util.factory.*;
+import xyz.detribes.bekapi.repository.*;
+import xyz.detribes.bekapi.restorepoint.*;
+import xyz.detribes.bekapi.util.factory.*;
 
 import java.util.*;
 

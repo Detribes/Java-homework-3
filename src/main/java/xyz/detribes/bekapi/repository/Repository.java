@@ -1,7 +1,7 @@
-package xyz.nasrally.domashka.repository;
+package xyz.detribes.bekapi.repository;
 
-import xyz.nasrally.domashka.restorepoint.*;
-import xyz.nasrally.domashka.util.factory.enums.*;
+import xyz.detribes.bekapi.restorepoint.*;
+import xyz.detribes.bekapi.util.factory.enums.*;
 
 import java.nio.file.*;
 import java.util.*;

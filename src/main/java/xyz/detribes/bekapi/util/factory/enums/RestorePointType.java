@@ -1,4 +1,4 @@
-package xyz.nasrally.domashka.util.factory.enums;
+package xyz.detribes.bekapi.util.factory.enums;
 
 /**
  * Перечисление с доступными типами рестор-поинтов. Используется в соответствующей фабрике.
